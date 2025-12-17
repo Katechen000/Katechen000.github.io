@@ -1,86 +1,192 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>數獨遊戲</title>
-<style>
-body {
-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-background: #f5f7fb;
-display: flex;
-justify-content: center;
-align-items: center;
-min-height: 100vh;
-}
-.app {
-background: white;
-padding: 24px;
-border-radius: 16px;
-box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-width: 360px;
-}
-h1 {
-text-align: center;
-margin-bottom: 12px;
-}
-.board {
-display: grid;
-grid-template-columns: repeat(9, 1fr);
-border: 3px solid #333;
-}
-.cell {
-width: 36px;
-height: 36px;
-border: 1px solid #aaa;
-text-align: center;
-font-size: 18px;
-}
-.cell input {
-width: 100%;
-height: 100%;
-border: none;
-text-align: center;
-font-size: 18px;
-outline: none;
-background: none;
-}
-.cell.fixed input {
-font-weight: bold;
-color: #333;
-}
-.cell:nth-child(3n):not(:nth-child(9n)) {
-border-right: 2px solid #333;
-}
-.cell:nth-child(n+19):nth-child(-n+27),
-.cell:nth-child(n+46):nth-child(-n+54) {
-border-bottom: 2px solid #333;
-}
-.controls {
-display: flex;
-justify-content: space-between;
-margin-top: 16px;
-}
-button {
-padding: 8px 12px;
-border-radius: 8px;
-border: none;
-cursor: pointer;
-background: #4f46e5;
-color: white;
-}
-button.secondary {
-background: #64748b;
-}
-.message {
-margin-top: 10px;
-text-align: center;
-font-size: 14px;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>數獨遊戲</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .app {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      width: 360px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      border: 3px solid #333;
+    }
+    .cell {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #aaa;
+      text-align: center;
+      font-size: 18px;
+    }
+    .cell input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      text-align: center;
+      font-size: 18px;
+      outline: none;
+      background: none;
+    }
+    .cell.fixed input {
+      font-weight: bold;
+      color: #333;
+    }
+    .cell:nth-child(3n):not(:nth-child(9n)) {
+      border-right: 2px solid #333;
+    }
+    .cell:nth-child(n+19):nth-child(-n+27),
+    .cell:nth-child(n+46):nth-child(-n+54) {
+      border-bottom: 2px solid #333;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+    }
+    button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #4f46e5;
+      color: white;
+    }
+    button.secondary {
+      background: #64748b;
+    }
+    .message {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-<h1>數獨</h1>
-<div id="board" class="board"></div>
-<div class="controls">
+  <div class="app">
+    <h1>數獨</h1>
+    <div id="board" class="board"></div>
+    <div class="controls">
+      <button onclick="newGame()">新遊戲</button>
+      <button class="secondary" onclick="checkSolution()">檢查答案</button>
+    </div>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    const boardEl = document.getElementById('board');
+    const messageEl = document.getElementById('message');
+    let solution = [];
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function isValid(board, r, c, n) {
+      for (let i = 0; i < 9; i++) {
+        if (board[r][i] === n || board[i][c] === n) return false;
+        const br = Math.floor(r / 3) * 3 + Math.floor(i / 3);
+        const bc = Math.floor(c / 3) * 3 + (i % 3);
+        if (board[br][bc] === n) return false;
+      }
+      return true;
+    }
+
+    function solve(board) {
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (board[r][c] === 0) {
+            for (const n of shuffle([1,2,3,4,5,6,7,8,9])) {
+              if (isValid(board, r, c, n)) {
+                board[r][c] = n;
+                if (solve(board)) return true;
+                board[r][c] = 0;
+              }
+            }
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function generatePuzzle() {
+      const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+      solve(board);
+      solution = board.map(r => r.slice());
+
+      let holes = 40; // 難度：洞的數量
+      while (holes > 0) {
+        const r = Math.floor(Math.random() * 9);
+        const c = Math.floor(Math.random() * 9);
+        if (board[r][c] !== 0) {
+          board[r][c] = 0;
+          holes--;
+        }
+      }
+      return board;
+    }
+
+    function render(board) {
+      boardEl.innerHTML = '';
+      board.flat().forEach((value, idx) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell' + (value !== 0 ? ' fixed' : '');
+        const input = document.createElement('input');
+        input.maxLength = 1;
+        input.value = value === 0 ? '' : value;
+        input.disabled = value !== 0;
+        input.oninput = () => {
+          if (!/[1-9]/.test(input.value)) input.value = '';
+        };
+        cell.appendChild(input);
+        boardEl.appendChild(cell);
+      });
+    }
+
+    function newGame() {
+      messageEl.textContent = '';
+      const puzzle = generatePuzzle();
+      render(puzzle);
+    }
+
+    function checkSolution() {
+      const inputs = [...document.querySelectorAll('.cell input')];
+      for (let i = 0; i < 81; i++) {
+        const r = Math.floor(i / 9);
+        const c = i % 9;
+        if (Number(inputs[i].value) !== solution[r][c]) {
+          messageEl.textContent = '❌ 還有錯誤，請再檢查！';
+          messageEl.style.color = 'red';
+          return;
+        }
+      }
+      messageEl.textContent = '🎉 恭喜，完成正確！';
+      messageEl.style.color = 'green';
+    }
+
+    newGame();
+  </script>
+</body>
+</html>
