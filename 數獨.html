@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>數獨遊戲</title>
+
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -13,6 +14,7 @@
       align-items: center;
       min-height: 100vh;
     }
+
     .app {
       background: white;
       padding: 24px;
@@ -20,15 +22,29 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       width: 360px;
     }
+
     h1 {
       text-align: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
+
+    .difficulty {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .difficulty select {
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
     .board {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
       border: 3px solid #333;
     }
+
     .cell {
       width: 36px;
       height: 36px;
@@ -36,6 +52,7 @@
       text-align: center;
       font-size: 18px;
     }
+
     .cell input {
       width: 100%;
       height: 100%;
@@ -45,57 +62,83 @@
       outline: none;
       background: none;
     }
+
     .cell.fixed input {
       font-weight: bold;
       color: #333;
     }
+
     .cell:nth-child(3n):not(:nth-child(9n)) {
       border-right: 2px solid #333;
     }
+
     .cell:nth-child(n+19):nth-child(-n+27),
     .cell:nth-child(n+46):nth-child(-n+54) {
       border-bottom: 2px solid #333;
     }
+
     .controls {
       display: flex;
       justify-content: space-between;
       margin-top: 16px;
+      gap: 6px;
     }
+
     button {
-      padding: 8px 12px;
+      flex: 1;
+      padding: 8px;
       border-radius: 8px;
       border: none;
       cursor: pointer;
       background: #4f46e5;
       color: white;
+      font-size: 13px;
     }
+
     button.secondary {
       background: #64748b;
     }
+
     .message {
       margin-top: 10px;
       text-align: center;
       font-size: 14px;
+      min-height: 18px;
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <h1>數獨</h1>
-    <div id="board" class="board"></div>
-    <div class="controls">
-      <button onclick="newGame()">新遊戲</button>
-      <button class="secondary" onclick="checkSolution()">檢查答案</button>
-      <button class="secondary" onclick="showSolution()">顯示答案</button>
+
+    <div class="difficulty">
+      Difficulty:
+      <select id="difficultySelect" onchange="newGame(this.value)">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+      </select>
     </div>
+
+    <div id="board" class="board"></div>
+
+    <div class="controls">
+      <button onclick="newGame(currentDifficulty)">New</button>
+      <button class="secondary" onclick="checkSolution()">Check</button>
+      <button class="secondary" onclick="showSolution()">Answer</button>
+    </div>
+
     <div id="message" class="message"></div>
   </div>
 
   <script>
     const boardEl = document.getElementById('board');
     const messageEl = document.getElementById('message');
+    const difficultySelect = document.getElementById('difficultySelect');
+
     let solution = [];
-    let puzzle = [];
+    let currentDifficulty = 'medium';
 
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -138,13 +181,9 @@
       solve(board);
       solution = board.map(r => r.slice());
 
-      let holes;
-      switch(difficulty) {
-        case 'easy': holes = 30; break;
-        case 'medium': holes = 40; break;
-        case 'hard': holes = 50; break;
-        default: holes = 40; break;
-      }
+      let holes = 40;
+      if (difficulty === 'easy') holes = 30;
+      if (difficulty === 'hard') holes = 50;
 
       while (holes > 0) {
         const r = Math.floor(Math.random() * 9);
@@ -159,15 +198,15 @@
 
     function render(board) {
       boardEl.innerHTML = '';
-      board.flat().forEach((value, idx) => {
+      board.flat().forEach(value => {
         const cell = document.createElement('div');
         cell.className = 'cell' + (value !== 0 ? ' fixed' : '');
         const input = document.createElement('input');
         input.maxLength = 1;
-        input.value = value === 0 ? '' : value;
+        input.value = value || '';
         input.disabled = value !== 0;
         input.oninput = () => {
-          if (!/[1-9]/.test(input.value)) input.value = '';
+          if (!/^[1-9]$/.test(input.value)) input.value = '';
         };
         cell.appendChild(input);
         boardEl.appendChild(cell);
@@ -175,29 +214,30 @@
     }
 
     function newGame(difficulty = 'medium') {
+      currentDifficulty = difficulty;
+      difficultySelect.value = difficulty;
       messageEl.textContent = '';
-      puzzle = generatePuzzle(difficulty);
-      render(puzzle);
+      render(generatePuzzle(difficulty));
     }
 
     function checkSolution() {
-      const inputs = [...document.querySelectorAll('.cell input')];
+      const inputs = document.querySelectorAll('.cell input');
       for (let i = 0; i < 81; i++) {
         const r = Math.floor(i / 9);
         const c = i % 9;
         if (Number(inputs[i].value) !== solution[r][c]) {
-          messageEl.textContent = '❌ 還有錯誤，請再檢查！';
+          messageEl.textContent = '❌ Incorrect, keep trying!';
           messageEl.style.color = 'red';
           return;
         }
       }
-      messageEl.textContent = '🎉 恭喜，完成正確！';
+      messageEl.textContent = '🎉 Correct! Well done!';
       messageEl.style.color = 'green';
     }
 
     function showSolution() {
       render(solution);
-      messageEl.textContent = '這是正確的答案！';
+      messageEl.textContent = '✔ Solution shown';
       messageEl.style.color = 'blue';
     }
 
@@ -205,4 +245,3 @@
   </script>
 </body>
 </html>
-
