@@ -86,6 +86,7 @@
     <div class="controls">
       <button onclick="newGame()">新遊戲</button>
       <button class="secondary" onclick="checkSolution()">檢查答案</button>
+      <button class="secondary" onclick="showSolution()">顯示答案</button>
     </div>
     <div id="message" class="message"></div>
   </div>
@@ -94,6 +95,7 @@
     const boardEl = document.getElementById('board');
     const messageEl = document.getElementById('message');
     let solution = [];
+    let puzzle = [];
 
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -131,12 +133,19 @@
       return true;
     }
 
-    function generatePuzzle() {
+    function generatePuzzle(difficulty) {
       const board = Array.from({ length: 9 }, () => Array(9).fill(0));
       solve(board);
       solution = board.map(r => r.slice());
 
-      let holes = 40; // 難度：洞的數量
+      let holes;
+      switch(difficulty) {
+        case 'easy': holes = 30; break;
+        case 'medium': holes = 40; break;
+        case 'hard': holes = 50; break;
+        default: holes = 40; break;
+      }
+
       while (holes > 0) {
         const r = Math.floor(Math.random() * 9);
         const c = Math.floor(Math.random() * 9);
@@ -165,9 +174,9 @@
       });
     }
 
-    function newGame() {
+    function newGame(difficulty = 'medium') {
       messageEl.textContent = '';
-      const puzzle = generatePuzzle();
+      puzzle = generatePuzzle(difficulty);
       render(puzzle);
     }
 
@@ -186,7 +195,14 @@
       messageEl.style.color = 'green';
     }
 
-    newGame();
+    function showSolution() {
+      render(solution);
+      messageEl.textContent = '這是正確的答案！';
+      messageEl.style.color = 'blue';
+    }
+
+    newGame('medium');
   </script>
 </body>
 </html>
+
