@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>數獨遊戲</title>
+
+<style>
+  body {
+    font-family: Arial;
+    text-align: center;
+  }
+
+  table {
+    border-collapse: collapse;
+    margin: 20px auto;
+  }
+
+  td {
+    border: 1px solid #333;
+  }
+
+  input {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    font-size: 20px;
+    border: none;
+  }
+
+  /* 粗框線 (3x3) */
+  tr:nth-child(3n) td {
+    border-bottom: 3px solid black;
+  }
+  td:nth-child(3n) {
+    border-right: 3px solid black;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>數獨遊戲</h1>
+
+<table id="sudoku"></table>
+
+<button onclick="checkSudoku()">檢查答案</button>
+
+<script>
+const puzzle = [
+[5,3,0,0,7,0,0,0,0],
+[6,0,0,1,9,5,0,0,0],
+[0,9,8,0,0,0,0,6,0],
+[8,0,0,0,6,0,0,0,3],
+[4,0,0,8,0,3,0,0,1],
+[7,0,0,0,2,0,0,0,6],
+[0,6,0,0,0,0,2,8,0],
+[0,0,0,4,1,9,0,0,5],
+[0,0,0,0,8,0,0,7,9]
+];
+
+const table = document.getElementById("sudoku");
+
+// 產生表格
+for (let r=0; r<9; r++){
+  let row = document.createElement("tr");
+
+  for (let c=0; c<9; c++){
+    let cell = document.createElement("td");
+    let input = document.createElement("input");
+
+    if(puzzle[r][c] !== 0){
+      input.value = puzzle[r][c];
+      input.disabled = true;
+    }
+
+    input.maxLength = 1;
+    input.oninput = () => {
+      input.value = input.value.replace(/[^1-9]/g,'');
+    };
+
+    cell.appendChild(input);
+    row.appendChild(cell);
+  }
+
+  table.appendChild(row);
+}
+
+// 檢查功能
+function checkSudoku(){
+  let grid = [];
+
+  for(let r=0;r<9;r++){
+    grid[r]=[];
+    for(let c=0;c<9;c++){
+      let val = table.rows[r].cells[c].firstChild.value;
+      grid[r][c] = val ? parseInt(val) : 0;
+    }
+  }
+
+  if(valid(grid)){
+    alert("目前沒有違反規則！");
+  } else {
+    alert("有重複數字，請檢查！");
+  }
+}
+
+function valid(g){
+  for(let i=0;i<9;i++){
+    let row=new Set(), col=new Set(), box=new Set();
+
+    for(let j=0;j<9;j++){
+      // row
+      if(g[i][j]){
+        if(row.has(g[i][j])) return false;
+        row.add(g[i][j]);
+      }
+
+      // col
+      if(g[j][i]){
+        if(col.has(g[j][i])) return false;
+        col.add(g[j][i]);
+      }
+
+      // box
+      let r=3*Math.floor(i/3)+Math.floor(j/3);
+      let c=3*(i%3)+j%3;
+      if(g[r][c]){
+        if(box.has(g[r][c])) return false;
+        box.add(g[r][c]);
+      }
+    }
+  }
+  return true;
+}
+</script>
+
+</body>
+</html>
