@@ -90,7 +90,6 @@ button{
 <div class="controls">
 <button onclick="newGame()">New</button>
 <button onclick="checkSolution()">Check</button>
-<button onclick="showSolution()">Answer</button>
 </div>
 
 <div id="message" class="message"></div>
@@ -143,7 +142,7 @@ function generatePuzzle(){
   solve(board);
   solution=board.map(r=>r.slice());
 
-  let holes=40; // 固定難度
+  let holes=40;
 
   while(holes>0){
     const r=Math.floor(Math.random()*9);
@@ -190,11 +189,6 @@ function checkSolution(){
     }
   }
   messageEl.textContent='🎉 全對！';
-}
-
-function showSolution(){
-  render(solution);
-  messageEl.textContent='✔ 已顯示答案';
 }
 
 newGame();
